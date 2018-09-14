@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, abort, Response
 import user
 import images
+import boto3
+import uuid
 
 app = Flask(__name__)
 
@@ -14,13 +16,13 @@ def present_login():
 def do_login():
     user_obj = user.User(request.form["username"], request.form["password"])
     logged_in = user_obj.login()
-    if logged_in and logged_in[0] == 1:
+    if logged_in and user_obj.username == "admin":
         session_token = logged_in[1]
         return render_template("admin.html",
                                session_id=session_token,
                                user_count=user.User.count_users(),
                                image_count=images.PostedImage.count_posted_images())
-    elif logged_in and logged_in[0] > 1:
+    elif logged_in:
         session_token = logged_in[1]
         return render_template("user.html",
                                session_id=session_token,
@@ -40,7 +42,7 @@ def user_page(session_token=None):
                                    session_id=session_token,
                                    last_login=user_obj.last_logged_in.isoformat(),
                                    username=user_obj.username,
-                                   uploaded_images=0,
+                                   uploaded_images=images.PostedImage.count_posted_images(uploader_id=user_obj.user_id),
                                    years=range(1990, 2019))
     return render_template("login.html", error="Invalid session.")
 
@@ -50,7 +52,7 @@ def admin_page(session_token=None):
     if session_token:
         user_obj = user.User()
         if user_obj.validate_session(session_token):
-            if user_obj.user_id == 1:
+            if user_obj.username == "admin":
                 return render_template("admin.html",
                                        session_id=session_token,
                                        user_count=user.User.count_users(),
@@ -80,6 +82,8 @@ def add_user(session_token=None):
                     return list_users(session_token=session_token)
                 else:
                     abort(Response("Could not create new user, perhaps the username already exists or is invalid?"))
+            else:
+                abort(Response("Could not create new user. Passwords did not match both times."))
     return render_template("login.html", error="Invalid session.")
 
 
@@ -88,7 +92,7 @@ def list_users(session_token=None):
     if session_token:
         user_obj = user.User()
         if user_obj.validate_session(session_token):
-            if user_obj.user_id == 1:
+            if user_obj.username == "admin":
                 all_users = user.User.get_all_users(user.User.SORT_LAST_LOGIN)
                 template_data = []
                 for each_user in all_users:
@@ -123,10 +127,10 @@ def list_unprocessed_images(session_token=None):
                               "processed": each.processed}
                 template_data.append(image_data)
             return render_template("user_images.html",
-                                   user_images=image_data,
+                                   user_images=template_data,
                                    username="Unprocessed Images",
                                    session_id=session_token,
-                                   images_posted=len(image_data))
+                                   images_posted=len(template_data))
     return render_template("login.html", error="Invalid session.")
 
 
@@ -149,11 +153,11 @@ def images_from_user_id(user_id=None, session_token=None):
                                   "processed": each.processed}
                     template_data.append(image_data)
                 return render_template("user_images.html",
-                                       user_images=image_data,
+                                       user_images=template_data,
                                        username=user_obj.username,
                                        last_logged_in=user_obj.last_logged_in,
                                        session_id=session_token,
-                                       images_posted=len(image_data))
+                                       images_posted=len(template_data))
             else:
                 # forbidden to non-admin users
                 abort(403)
@@ -168,6 +172,18 @@ def submit_auto_image():
     if session_token:
         user_obj = user.User()
         if user_obj.validate_session(session_token):
-            # TODO: submit auto image
-            return user_page(session_token=session_token)
+            s3 = boto3.resource('s3')
+            new_file_name = "{0}.jpg".format(uuid.uuid4())
+            file = request.files["image_upload"]
+            if file.mimetype == "image/jpeg":
+                s3.Bucket('tf-trainer').put_object(Key=new_file_name, Body=file)
+                obj = s3.Bucket('tf-trainer').Object(new_file_name)
+                obj.Acl().put(ACL="public-read")
+                new_url = "https://s3.amazonaws.com/tf-trainer/" + new_file_name
+                new_posted_image = images.PostedImage(request.form['make'],request.form['model'],
+                                                      request.form['year'],new_url,user_obj.user_id)
+                new_posted_image.store()
+                return user_page(session_token=session_token)
+            else:
+                abort(Response("Invalid data upload. Only image/jpeg MIME type file uploads are allowed."))
     return render_template("login.html", error="Invalid session.")

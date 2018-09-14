@@ -6,7 +6,7 @@
     <p>Images uploaded: {{ uploaded_images }}</p>
     <p>Last login: {{ last_login }}</p>
 </div>
-<form action="/submit-auto-image/" method="post">
+<form action="/submit-auto-image/" method="post" enctype="multipart/form-data">
     <input type="hidden" name="session_token" value="{{ session_id }}" />
     <table cellpadding="3" cellspacing="3" bgcolor="#bdb76b">
         <tr>

@@ -2,6 +2,7 @@ import MySQLdb
 import json
 import datetime
 
+
 class PostedImage:
     def __init__(self, make=None, model=None, year=None, url=None, uploader_id=None):
         self.make = make
@@ -54,7 +55,6 @@ class PostedImage:
             c.close()
             db.close()
         return None
-
 
     def flush_metadata(self):
         if self.image_id == 0:
@@ -131,7 +131,7 @@ class PostedImage:
             sql += " WHERE processed IS NULL"
         try:
             if uploader_id:
-                if processed is False
+                if processed is False:
                     sql += " AND uploader_id=%s"
                 else:
                     sql += " WHERE uploader_id=%s"

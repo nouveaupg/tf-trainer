@@ -4,6 +4,7 @@
 </head>
 <h1>{{ username }}</h1>
 <p>[&nbsp;<a href="/admin/{{ session_id }}">administration page</a>&nbsp;]</p>
+<p>[ <a href="/users/last-login/{{ session_id }}">list users</a> ]</p>
 <ul>
   <li>Last Logged In: {{ last_logged_in }}</li>
   <li>Images Posted: {{ images_posted }} </li>
