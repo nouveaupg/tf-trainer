@@ -1,0 +1,39 @@
+<html>
+<head><title>Logged in as: {{ username }}</title></head>
+<h1>Logged in as: {{ username }}</h1>
+[&nbsp;<a href="/logout/{{ session_id }}">logout</a>&nbsp;]
+<div id="user_stats">
+    <p>Images uploaded: {{ uploaded_images }}</p>
+    <p>Last login: {{ last_login }}</p>
+</div>
+<form action="/submit-auto-image/" method="post">
+    <input type="hidden" name="session_token" value="{{ session_id }}" />
+    <table cellpadding="3" cellspacing="3" bgcolor="#bdb76b">
+        <tr>
+            <td><strong>Year</strong></td>
+            <td>
+                <select name="year">
+                {%  for year in years %}
+                    <option value="{{ year }}">{{ year }}</option>
+                {%  endfor %}
+                </select>
+            </td>
+            <td><strong>Make</strong></td>
+            <td><select name="make"><option value="Ford">Ford</option></select></td>
+            <td><strong>Model</strong></td>
+            <td><select name="model">
+                <option value="F-150">F-150</option>
+                <option value="Mustang">Mustang</option>
+                <option value="Focus">Focus</option>
+            </select></td>
+        </tr>
+        <tr>
+            <td><strong>Image</strong></td>
+            <td colspan="5"><input type="file" name="image_upload" /></td>
+        </tr>
+        <tr>
+            <td colspan="6" align="right"><input type="submit" value="Upload" /></td>
+        </tr>
+    </table>
+</form>
+</html>

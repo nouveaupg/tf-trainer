@@ -1,0 +1,21 @@
+<html>
+<head><title>Administration</title></head>
+<h1>Administration</h1>
+[ <a href="/logout/{{ session_id }}">logout</a> ]
+<ul>
+  <li>User Count: {{ user_count }} [ <a href="/users/last-login/{{ session_id }}">list users</a> ]</li>
+  <li>Image Count: {{ image_count }} [ <a href="/images/not-processed/{{ session_id }}">list unprocessed images</a> ]</li>
+  <li>Processed Images: 0</li>
+</ul>
+<hr />
+<h1>Add user</h1>
+<p><em>Valid usernames consist of 4-55 alphanumeric characters.</em></p>
+<form method="post" action="/add-user/{{ session_id }}">
+  <table>
+    <tr><td><label>Username:</label></td><td><input name="username" size="35" /></td></tr>
+    <tr><td><label>Password:</label></td><td><input size="35" name="password" type="password" /></td></tr>
+    <tr><td><label>Repeat Password:</label></td><td><input size="35" name="password_repeat" type="password" /></td></tr>
+  </table>
+  <input type="submit" value="Add user" />
+</form>
+</html>

@@ -1,0 +1,23 @@
+<html>
+<head><title>Users</title></head>
+<h1>Users</h1>
+<p>[&nbsp;<a href="/admin/{{ session_id }}">administration page</a>&nbsp;]</p>
+<table cellpadding="3" border="3" cellspacing="3">
+  <tr>
+    <td><strong>Username</strong></td>
+    <td><strong>Last Logged In<strong></td>
+    <td><strong>Last Image Posted</strong></td>
+    <td><strong>Total Images Posted</strong></td>
+    <td><strong>Options</strong></td>
+  </tr>
+  {% for each_user in users %}
+  <tr>
+    <td>{{ each_user.username }}</td>
+    <td>{{ each_user.last_logged_in }}</td>
+    <td>{{ each_user.last_image_posted }}</td>
+    <td align="right">{{ each_user.total_images_posted }}</td>
+    <td>[&nbsp;<a href="/images/user/{{ each_user.user_id }}/{{ session_id }}">view submitted images</a>&nbsp;]</td>
+  </tr>
+  {% endfor %}
+</table>
+</html>
