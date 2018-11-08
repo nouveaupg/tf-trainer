@@ -1,3 +1,10 @@
+{% extends "base.html" %}
+
+{% block header %}
+    <h1>{% block title %}Unprocessed Images posted by {{ username }} - TensorFlow Trainer{% endblock %}</h1>
+    <p id="header_nav">[ <a class="header_anchor" href="/admin/{{ session_id }}">back to administration</a> ]</p>
+    <p class="header_nav">[ <a href="/users/last-login/{{ session_id }}">list users</a> ]</p>
+{% endblock %}
 <html>
 <head>
     <title>Unprocessed Images</title>
@@ -5,28 +12,36 @@
 <h1>{{ username }}</h1>
 <p>[&nbsp;<a href="/admin/{{ session_id }}">administration page</a>&nbsp;]</p>
 <p>[ <a href="/users/last-login/{{ session_id }}">list users</a> ]</p>
-<ul>
-  <li>Last Logged In: {{ last_logged_in }}</li>
-  <li>Images Posted: {{ images_posted }} </li>
-</ul>
-<table cellspacing=3 cellpadding=3 border=3>
-  <tr>
-    <td><strong>Image</strong></td>
-    <td><strong>Year</strong></td>
-    <td><strong>Make</strong></td>
-    <td><strong>Model</strong></td>
-    <td><strong>Uploaded</strong></td>
-    <td><strong>Processed</strong></td>
-  </tr>
-  {% for each_image in user_images %}
-  <tr>
-    <td><a href="{{ each_image.url }}"><img src="{{ each_image.url }}" width="128" height="128" /></a></td>
-    <td>{{ each_image.year }}</td>
-    <td>{{ each_image.make }}</td>
-    <td>{{ each_image.model }}</td>
-    <td>{{ each_image.uploaded }}</td>
-    <td>{{ each_image.processed }}</td>
-  </tr>
-  {% endfor %}
-</table>
-</html>
+
+{% endblock %}
+{% block content %}
+    <div id="last_login_info">
+        <ul>
+            <li>Last Logged In: {{ last_logged_in }}</li>
+            <li>Images Posted: {{ images_posted }} </li>
+        </ul>
+    </div>
+    <div id="user_images">
+        <table cellspacing=3 cellpadding=3 border=3>
+            <tr>
+                <td><strong>Image</strong></td>
+                <td><strong>Year</strong></td>
+                <td><strong>Make</strong></td>
+                <td><strong>Model</strong></td>
+                <td><strong>Uploaded</strong></td>
+                <td><strong>Processed</strong></td>
+            </tr>
+            {% for each_image in user_images %}
+                <tr>
+                    <td><a href="{{ each_image.url }}"><img src="{{ each_image.url }}" width="128" height="128"/></a>
+                    </td>
+                    <td>{{ each_image.year }}</td>
+                    <td>{{ each_image.make }}</td>
+                    <td>{{ each_image.model }}</td>
+                    <td>{{ each_image.uploaded }}</td>
+                    <td>{{ each_image.processed }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

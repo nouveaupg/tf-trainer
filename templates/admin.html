@@ -1,7 +1,10 @@
-<html>
-<head><title>Administration</title></head>
-<h1>Administration</h1>
-[ <a href="/logout/{{ session_id }}">logout</a> ]
+{% extends "base.html" %}
+
+{% block header %}<h1>{% block title %}Login - TensorFlow Trainer{% endblock %}</h1>
+    <p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
+{% endblock %}
+
+{% block content %}
 <ul>
   <li>User Count: {{ user_count }} [ <a href="/users/last-login/{{ session_id }}">list users</a> ]</li>
   <li>Image Count: {{ image_count }} [ <a href="/images/not-processed/{{ session_id }}">list unprocessed images</a> ]</li>
@@ -18,4 +21,4 @@
   </table>
   <input type="submit" value="Add user" />
 </form>
-</html>
+{% endblock %}

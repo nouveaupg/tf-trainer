@@ -1,24 +1,27 @@
-<html>
-<head>
-    <title>Restricted Access</title>
-</head>
-<h1>Log In</h1>
-<strong style="color:red">{{ error }}</strong>
-<form action="/login" method="post">
-    <table>
-      <tr>
-        <td><strong><label>Username</label></strong></td>
-        <td><input size="35" name="username" /></td>
-      </tr>
-      <tr>
-        <td><strong><label>Password</label></strong></td>
-        <td><input size="35" name="password" type="password" /></td>
-      </tr>
-      <tr>
-        <td colspan="2" align="right">
-          <input type="Submit" value="Login"/>
-        </td>
-      </tr>
-    </table>
-</form>
-</html>
+{% extends "base.html" %}
+
+{% block header %}<h1>{% block title %}Login - TensorFlow Trainer{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <div id="login_box">
+        <strong id="login_error">{{ error }}</strong>
+        <form action="/login" method="post">
+            <table>
+                <tr>
+                    <td><strong><label>Username</label></strong></td>
+                    <td><input size="35" class="dark_input" name="username"/></td>
+                </tr>
+                <tr>
+                    <td><strong><label>Password</label></strong></td>
+                    <td><input size="35" class="dark_input" name="password" type="password"/></td>
+                </tr>
+                <tr>
+                    <td colspan="2" align="right">
+                        <input type="Submit" value="Login" class="blue_submit_button"/>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+{% endblock %}

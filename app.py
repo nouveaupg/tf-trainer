@@ -99,8 +99,10 @@ def list_users(session_token=None):
                     user_data = {"username": each_user.username,
                                  "user_id": each_user.user_id,
                                  "last_logged_in": each_user.last_logged_in.isoformat(),
-                                 "last_image_posted": images.PostedImage.date_of_last_image_posted_by(each_user.user_id),
-                                 "total_images_posted": images.PostedImage.count_posted_images(uploader_id=each_user.user_id)}
+                                 "last_image_posted": images.PostedImage.date_of_last_image_posted_by(
+                                     each_user.user_id),
+                                 "total_images_posted": images.PostedImage.count_posted_images(
+                                     uploader_id=each_user.user_id)}
                     template_data.append(user_data)
                 return render_template("list_users.html",
                                        users=template_data,
@@ -166,7 +168,7 @@ def images_from_user_id(user_id=None, session_token=None):
     abort(Response("Invalid request."))
 
 
-@app.route('/submit-auto-image/', methods=["POST"])
+@app.route('/submit-image/', methods=["POST"])
 def submit_auto_image():
     session_token = request.form["session_token"]
     if session_token:
@@ -177,11 +179,12 @@ def submit_auto_image():
             file = request.files["image_upload"]
             if file.mimetype == "image/jpeg":
                 s3.Bucket('tf-trainer').put_object(Key=new_file_name, Body=file)
+                # NOTE: CHANGE THIS TO YOUR OWN BUCKET
                 obj = s3.Bucket('tf-trainer').Object(new_file_name)
                 obj.Acl().put(ACL="public-read")
                 new_url = "https://s3.amazonaws.com/tf-trainer/" + new_file_name
-                new_posted_image = images.PostedImage(request.form['make'],request.form['model'],
-                                                      request.form['year'],new_url,user_obj.user_id)
+                new_posted_image = images.PostedImage(request.form['make'], request.form['model'],
+                                                      request.form['year'], new_url, user_obj.user_id)
                 new_posted_image.store()
                 return user_page(session_token=session_token)
             else:

@@ -1,0 +1,11 @@
+<!doctype html>
+<head>
+    <title>{% block title %}{% endblock %} - Tensor Flow Trainer Administration</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dark_ui.css') }}">
+</head>
+<body class="dark_grey_background">
+<div id="admin_content_view">
+    <div id="header" class="ui_div_highlight">{% block header %}{% endblock %}</div>
+    <div id="content" class="ui_div_background">{% block content %}{% endblock %}</div>
+</div>
+</body>

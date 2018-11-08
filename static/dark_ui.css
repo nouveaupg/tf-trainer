@@ -1,0 +1,67 @@
+.dark_grey_background {
+    background-color: rgb(40, 40, 40);
+    color: white;
+}
+
+.ui_div_background {
+    background-color: rgb(60, 63, 65);
+    color: white;
+}
+
+.ui_div_highlight {
+    background-color: rgb(81, 86, 88);
+    color: white;
+}
+
+#login_error {
+    color:red;
+}
+
+#login_box {
+    width:400px;
+    padding:5px;
+}
+
+#header {
+    width:1024px;
+    padding:5px;
+}
+
+#content {
+    width:1024px;
+    height:768px;
+    padding:5px;
+}
+
+label {
+    color:lightgray;;
+}
+
+.dark_input {
+    background-color: black;
+    color:white;
+    padding: 5px;
+    border: 1px solid rgb(96,96,96);
+}
+
+.blue_submit_button {
+    background-color: rgb(54,88,128);
+    border: 1px solid rgb(76,122,140);
+    color: white;
+    padding: 5px;
+}
+
+.header_anchor {
+    color: orange;
+    text-decoration: none;
+}
+
+.header_anchor:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+.header_anchor:visited {
+    color:rgb(54,88,128);
+    text-decoration: underline;
+}

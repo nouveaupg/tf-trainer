@@ -1,17 +1,22 @@
 import MySQLdb
 import hashlib
 import re
-import random
 import datetime
+import binascii
 
 USER_REGEX = re.compile("[A-Za-z0-9]{4,55}")
 SQL_PROTECTION_REGEX = re.compile("[a-fA-F0-9]{4,36}")
 
 
+class RegexException(Exception):
+    """ Raised when input fails a RegEx match """
+    pass
+
+
 class User:
     SORT_LAST_LOGIN = 1
-    
-    def __init__(self, username=None, password=None):
+
+    def __init__(self, db, username=None, password=None):
         self.username = username
         if self.username:
             together = username + password
@@ -22,13 +27,13 @@ class User:
         self.user_id = -1
         self.status = None
         self.session_id = None
+        self.db = db
 
     def validate_session(self, session_token):
         if not SQL_PROTECTION_REGEX.match(session_token):
             # guard against sql injection
-            return False
-        db = MySQLdb.connect(host="localhost", user="root", database='tensor_flow')
-        c = db.cursor()
+            raise RegexException
+        c = self.db.cursor()
         try:
             c.execute("SELECT user_id,username,password,last_login,status FROM users WHERE session_token=%s",
                       (session_token,))
@@ -44,16 +49,25 @@ class User:
                 db.close()
                 return True
         except MySQLdb.Error as e:
-            c.close()
-            db.close()
+            try:
+                if e.args[0] == 1062:
+                    return -1, "E-mail address already exists in database!"
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
         return False
 
     def create_user(self):
         if not USER_REGEX.match(self.username):
             # protect against sql injection
-            return None
-        db = MySQLdb.connect(host="localhost", user="root", database='tensor_flow')
-        c = db.cursor()
+            raise RegexException
+        c = self.db.cursor()
         self.session_id = new_session_token()
         try:
             c.execute("INSERT INTO users (username,password,session_token) VALUES (%s,%s,%s);",
@@ -64,14 +78,22 @@ class User:
             db.close()
             return last_row, self.session_id
         except MySQLdb.Error as e:
-            c.close()
-            db.close()
-            return None
+            try:
+                if e.args[0] == 1062:
+                    return -1, "E-mail address already exists in database!"
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        return None
 
-    @staticmethod
-    def count_users():
-        db = MySQLdb.connect(host="localhost", user="root", database="tensor_flow")
-        c = db.cursor()
+    def count_users(self):
+        c = self.db.cursor()
         try:
             c.execute("SELECT COUNT(*) FROM users;")
             row = c.fetchone()
@@ -79,38 +101,45 @@ class User:
             db.close()
             return row[0]
         except MySQLdb.Error as e:
-            c.close()
-            db.close()
-            return 0
+            try:
+                if e.args[0] == 1062:
+                    return -1, "E-mail address already exists in database!"
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        return 0
 
     def logout(self, session_token):
         if not SQL_PROTECTION_REGEX.match(session_token):
-            return False
-        db = MySQLdb.connect(host="localhost", user="root", database="tensor_flow")
-        c = db.cursor()
+            # protect against sql injection
+            return RegexException
+        c = self.db.cursor()
         c.execute("SELECT user_id FROM users WHERE session_token=%s", (session_token,))
         row = c.fetchone()
-        result = 0
+        sql_result = 0
         if row:
-            result = c.execute("UPDATE users SET session_token=NULL WHERE user_id=%s", (row[0],))
+            sql_result = c.execute("UPDATE users SET session_token=NULL WHERE user_id=%s", (row[0],))
         c.close()
-        if result == 1:
+        if sql_result == 1:
             self.session_id = None
             self.user_id = -1
             self.username = None
             self.password = None
             self.last_logged_in = None
-            db.commit()
-            db.close()
+            self.db.commit()
             return True
-        db.close()
         return False
 
     def login(self):
         if not USER_REGEX.match(self.username):
             return None
-        db = MySQLdb.connect(host="localhost", user="root", database='tensor_flow')
-        c = db.cursor()
+        c = self.db.cursor()
         c.execute("SELECT user_id,password,last_login FROM users WHERE username=%s", (self.username,))
         row = c.fetchone()
         if row is None:
@@ -121,18 +150,15 @@ class User:
         self.user_id = row[0]
         self.session_id = new_session_token()
         c.execute("UPDATE users SET session_token=%s WHERE user_id=%s", (self.session_id, self.user_id))
-        db.commit()
+        self.db.commit()
         c.close()
-        db.close()
         return self.user_id, self.session_id
 
-    @staticmethod
     def get_all_users(sort=None):
         sql = "SELECT user_id, username, password, session_token, last_login, status FROM users"
         if sort == User.SORT_LAST_LOGIN:
             sql += " ORDER BY last_login DESC"
-        db = MySQLdb.connect(host="localhost", user="root", database='tensor_flow')
-        c = db.cursor()
+        c = self.db.cursor()
         all_users = []
         try:
             c.execute(sql)
@@ -149,23 +175,47 @@ class User:
             db.close()
             return all_users
         except MySQLdb.Error as e:
-            c.close()
-            db.close()
-            return None
+            try:
+                if e.args[0] == 1062:
+                    return -1, "E-mail address already exists in database!"
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
 
 
 def new_session_token():
-    token = "%08x%08x" % (random.randint(0, 0xffffffff), random.randint(0, 0xffffffff))
-    return token.upper()
+    rng_out = os.urandom(8)
+    new_token += binascii.hexlify(rng_out).decode()
+    return new_token
 
 
 if __name__ == "__main__":
-    print("Attempting to create admin user...")
-    admin_password = input("Administrator password: ")
-    u = User("admin", admin_password)
-    admin_account = u.create_user()
-    if admin_account:
-        print("Admin account created")
-    else:
-        print("Could not create admin account.")
+    import sys
 
+    db = Database()
+    print("Connected to database successfully, checking for admin user.")
+    admin_id = db.get_admin_id()
+    if admin_id:
+        print("Account 'admin' found, reset password? (Y/n)")
+        raw_input = input("> ")
+        if raw_input == "Y":
+            new_passwd = reset_admin_password_console()
+            db.reset_password(admin_id, new_passwd)
+            print("Reset admin password.")
+            sys.exit(0)
+    else:
+        print("No admin account found, creating a new one.")
+        new_passwd = reset_admin_password_console()
+        result = db.create_user("Administrator", "admin", new_passwd, "console")
+        if result:
+            print("Successfully created new admin user.")
+            sys.exit(0)
+        else:
+            print("Failed to create new admin user.")
+            sys.exit(1)

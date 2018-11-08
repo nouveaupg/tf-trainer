@@ -19,11 +19,12 @@ class Vehicle:
 
         db = MySQLdb.connect(host='localhost', user='root', database='tensor_flow')
         c = db.cursor()
-        sql = "INSERT INTO posted_images (year,make,model,url,uploader_id) VALUES ({0},'{1}','{2}','{3}',{4});".format(self.year,
-                                                                                                                       self.make,
-                                                                                                                       self.model,
-                                                                                                                       self.s3path,
-                                                                                                                       self.uploader_id)
+        sql = "INSERT INTO posted_images (year,make,model,url,uploader_id) VALUES ({0},'{1}','{2}','{3}',{4});".format(
+            self.year,
+            self.make,
+            self.model,
+            self.s3path,
+            self.uploader_id)
         try:
             c.execute(sql)
             last_row = c.lastrowid
@@ -55,7 +56,8 @@ class Vehicle:
                 predicate += " AND uploader_id={0}".format(uploader)
             else:
                 predicate = "uploader_id={0}".format(uploader)
-        sql = "SELECT vehicle_id,year,make,model,s3path,uploader_id,processed FROM vehicles WHERE {0};".format(predicate)
+        sql = "SELECT vehicle_id,year,make,model,s3path,uploader_id,processed FROM vehicles WHERE {0};".format(
+            predicate)
         db = MySQLdb.connect(host="localhost", user="root", database="tensor_flow")
         c = db.cursor()
         c.execute(sql)

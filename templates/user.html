@@ -1,12 +1,15 @@
-<html>
-<head><title>Logged in as: {{ username }}</title></head>
-<h1>Logged in as: {{ username }}</h1>
-[&nbsp;<a href="/logout/{{ session_id }}">logout</a>&nbsp;]
-<div id="user_stats">
+{% extends "base.html" %}
+
+{% block header %}<h1>{% block title %}Logged in as: {{ username }} - TensorFlow Trainer{% endblock %}</h1>
+    <p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
+    <div id="user_stats">
     <p>Images uploaded: {{ uploaded_images }}</p>
     <p>Last login: {{ last_login }}</p>
-</div>
-<form action="/submit-auto-image/" method="post" enctype="multipart/form-data">
+    </div>
+{% endblock %}
+
+{% block content %}
+<form action="/submit-image" method="post" enctype="multipart/form-data">
     <input type="hidden" name="session_token" value="{{ session_id }}" />
     <table cellpadding="3" cellspacing="3" bgcolor="#bdb76b">
         <tr>
@@ -36,4 +39,4 @@
         </tr>
     </table>
 </form>
-</html>
+{% endblock %}
