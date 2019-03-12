@@ -3,6 +3,18 @@ import json
 import datetime
 
 
+def create_db_connection():
+    config_stream = open("config.json", "r")
+    config_data = json.load(config_stream)
+    config_stream.close()
+    db_host = config_data['mysql_host']
+    db_username = config_data['mysql_user']
+    db_password = config_data['mysql_password']
+    db_name = config_data['mysql_database']
+    db = MySQLdb.connect(db_host, db_username, db_password, db_name)
+    return db
+
+
 class PostedImage:
     def __init__(self, make=None, model=None, year=None, url=None, uploader_id=None):
         self.make = make
@@ -19,8 +31,7 @@ class PostedImage:
         if self.image_id != 0:
             # image already in database
             return self.image_id
-
-        db = MySQLdb.connect(host="localhost", user="root", database='tensor_flow')
+        db = create_db_connection()
         c = db.cursor()
         try:
             c.execute("INSERT INTO posted_images (year,make,model,url,uploader_id) VALUES (%s,%s,%s,%s,%s)",
@@ -42,7 +53,7 @@ class PostedImage:
         # image_id = 0 means no database record
         if self.image_id == 0:
             return None
-        db = MySQLdb.connect(host="localhost", user="root", database='tensor_flow')
+        db = create_db_connection()
         c = db.cursor()
         try:
             c.execute("SELECT json_data FROM posted_images WHERE image_id=%s", (self.image_id,))
@@ -60,7 +71,7 @@ class PostedImage:
     def flush_metadata(self):
         if self.image_id == 0:
             return False
-        db = MySQLdb.connect(host="localhost", user="root", database='tensor_flow')
+        db = create_db_connection()
         c = db.cursor()
         try:
             result = c.execute("UPDATE posted_images SET json_data=%s WHERE image_id=%s",
@@ -78,7 +89,7 @@ class PostedImage:
 
     @staticmethod
     def date_of_last_image_posted_by(uploader_id):
-        db = MySQLdb.connect(host="localhost", user="root", database="tensor_flow")
+        db = create_db_connection()
         c = db.cursor()
         try:
             c.execute("SELECT uploaded FROM posted_images WHERE uploader_id=%s ORDER BY uploaded DESC LIMIT 1",
@@ -97,7 +108,7 @@ class PostedImage:
 
     @staticmethod
     def count_posted_images(uploader_id=None, processed=False):
-        db = MySQLdb.connect(host="localhost", user="root", database="tensor_flow")
+        db = create_db_connection()
         c = db.cursor()
         sql = "SELECT COUNT(*) FROM posted_images"
         if processed is False:
@@ -124,7 +135,7 @@ class PostedImage:
     def get_images(uploader_id=None, processed=False):
         # TODO: probably want some paging (offset/limit) here at some point)
         images = []
-        db = MySQLdb.connect(host="localhost", user="root", database="tensor_flow")
+        db = create_db_connection()
         c = db.cursor()
         sql = "SELECT image_id, year, make, model, url, uploader_id,processed,uploaded FROM posted_images"
         if processed is False:
